@@ -33,7 +33,24 @@ class Server {
 
             try {
 
-                System.out.println(in.read());
+                //Here we read the buffer from the client
+                switch(in.read()) {
+                    case 1:
+                        System.out.println("[Server] Performing action one!");
+                        break;
+                    case 2:
+                        break;
+                    case 3:
+                        break;
+                    case 4:
+                        break;
+                    case 5:
+                        break;
+                    case 6:
+                        break;
+                    case 7:
+                        break;
+                }
 
             } catch(Exception e){
                 System.err.println("Data received in unknown format");
