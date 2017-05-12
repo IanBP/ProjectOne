@@ -13,7 +13,7 @@ class Server {
 
         ServerSocket service = null;
         Socket connection = null;
-        DataOutputStream out = null;
+        PrintStream out = null;
         DataInputStream in = null;
 
         try {
@@ -28,7 +28,7 @@ class Server {
             System.out.println("[Server] Connection received from " + connection.getInetAddress().getHostName());
 
             //Get streams from client
-            out = new DataOutputStream(connection.getOutputStream());
+            out = new PrintStream(connection.getOutputStream());
             in = new DataInputStream(connection.getInputStream());
 
             try {
@@ -36,7 +36,11 @@ class Server {
                 //Here we read the buffer from the client
                 switch(in.read()) {
                     case 1:
-                        System.out.println("[Server] Performing action one!");
+                        System.out.println("[Server] Finding Current Date and Time!");
+
+                        //Run a command read its output and respond to the clients request
+                        clientResponse(out, "Hosts current date and time is " + readCommandOutput(runCommand("date")));
+
                         break;
                     case 2:
                         break;
@@ -72,9 +76,70 @@ class Server {
             }
         }
     }
+
+    /**
+     * Sends a response back to the client through a data output stream
+     * @param outputStream
+     */
+    private static void clientResponse(PrintStream outputStream, String responseText)
+    {
+        try {
+
+            outputStream.println("[Server] Response: " + responseText);
+            outputStream.println("[500] OK");
+
+            outputStream.close();
+
+        } catch(Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Reads a commands output and returns it as a string
+     * @param process Process object
+     * @return String command output
+     */
+    private static String readCommandOutput(Process process)
+    {
+        String s;
+        StringBuilder sb = new StringBuilder();
+
+        try {
+            BufferedReader stdInput = new BufferedReader(new InputStreamReader(process.getInputStream()));
+
+            while ((s = stdInput.readLine()) != null) {
+                sb.append(s);
+            }
+
+        } catch(IOException e) {
+            e.printStackTrace();
+        }
+
+        return sb.toString();
+    }
+
+    /**
+     * Wrapper for Runtime Exec command
+     * which executes a command on a linux or windows terminal
+     *
+     * @return Process returns a process object
+     */
+    private static Process runCommand(String command)
+    {
+        try {
+            return Runtime.getRuntime().exec(command);
+        } catch(IOException e) {
+            e.printStackTrace();
+        }
+        //Something went wrong
+        return null;
+    }
 }
 
-//Menu is on the client side
+
+
+
 /*
 
 for(int i = 0 i < 10 i++ {
