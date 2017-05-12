@@ -46,6 +46,16 @@ class Client {
                     out.writeByte(command);
                     System.out.println("[Client] Data Sent Successfully!");
 
+                    String responseLine;
+
+                    //Read the response from the server
+                    while ((responseLine = in.readLine()) != null) {
+                        System.out.println(responseLine);
+                        if (responseLine.contains("[500] OK")) {
+                            break;
+                        }
+                    }
+
 
                 } catch (Exception e) {
 
