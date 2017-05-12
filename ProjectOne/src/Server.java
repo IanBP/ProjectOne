@@ -6,50 +6,39 @@ import java.net.Socket;
  * Created by christianbartram on 5/11/17.
  */
 class Server {
-    ServerSocket providerSocket;
-    Socket connection = null;
-    ObjectOutputStream out;
-    ObjectInputStream in;
-    String message;
 
-    void listen()
+
+    public static void main(String[] args)
     {
+
+        ServerSocket service = null;
+        Socket connection = null;
+        DataOutputStream out = null;
+        DataInputStream in = null;
+
         try {
             //creating a server socket
-            providerSocket = new ServerSocket(43594);
+            service = new ServerSocket(43594);
 
             // Wait for connection
             System.out.println("[Server] Waiting for connection...");
 
-            new Client().request();
-
-            connection = providerSocket.accept();
+            connection = service.accept();
 
             System.out.println("[Server] Connection received from " + connection.getInetAddress().getHostName());
 
-            out = new ObjectOutputStream(connection.getOutputStream());
-            out.flush();
-            in = new ObjectInputStream(connection.getInputStream());
+            //Get streams from client
+            out = new DataOutputStream(connection.getOutputStream());
+            in = new DataInputStream(connection.getInputStream());
 
-            sendMessage("Connection successful");
+            try {
 
-            do {
-                try {
+                System.out.println(in.read());
 
-                    message = (String) in.readObject();
-
-                    System.out.println("[Client] " + message);
-
-                    if (message.equals("bye")) {
-                        sendMessage("bye");
-                    }
-
-                } catch(ClassNotFoundException e){
-                    System.err.println("Data received in unknown format");
-                    e.printStackTrace();
-                }
-
-            } while(!message.equals("bye"));
+            } catch(Exception e){
+                System.err.println("Data received in unknown format");
+                e.printStackTrace();
+            }
 
         } catch(IOException ioException) {
             ioException.printStackTrace();
@@ -59,27 +48,13 @@ class Server {
                 System.out.println("[Server] Closing Connection...");
                 in.close();
                 out.close();
-                providerSocket.close();
+                service.close();
             }
             catch(IOException ioException){
                 ioException.printStackTrace();
             }
         }
     }
-
-    void sendMessage(String msg)
-    {
-        try {
-
-            out.writeObject(msg);
-            out.flush();
-            System.out.println("[Server] " + msg);
-
-        } catch(IOException e) {
-            e.printStackTrace();
-        }
-    }
-
 }
 
 //Menu is on the client side
