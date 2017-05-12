@@ -30,7 +30,7 @@ class Client {
         }
 
         try {
-            System.out.println("[Client] Making connection request to hostname: ");
+            System.out.println("[Client] Making connection request to hostname: " + hostname);
 
             //1. creating a socket to connect to the server
             requestSocket = new Socket(hostname, 43594);
