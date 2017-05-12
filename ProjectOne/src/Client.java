@@ -23,8 +23,14 @@ class Client {
         printMenu();
         processInput();
 
+        //If the user chose to exit dont send it to the server theres no point
+        if(command == 7) {
+            System.out.println("Thank you for using this software!");
+            System.exit(0);
+        }
+
         try {
-            System.out.println("[Client] Making connection request to hostname: ");
+            System.out.println("[Client] Making connection request to hostname: " + hostname);
 
             //1. creating a socket to connect to the server
             requestSocket = new Socket(hostname, 43594);
@@ -69,7 +75,6 @@ class Client {
 
             System.err.println("You are trying to connect to an unknown host!");
 
-            unknownHost.printStackTrace();
 
         } catch(IOException ioException) {
 
@@ -85,7 +90,8 @@ class Client {
                 out.close();
                 requestSocket.close();
 
-            } catch(IOException ioException){
+            } catch(IOException ioException) {
+
                 ioException.printStackTrace();
             }
         }
