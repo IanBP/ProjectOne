@@ -35,14 +35,16 @@ class Client {
             out = new DataOutputStream(requestSocket.getOutputStream());
             in = new DataInputStream(requestSocket.getInputStream());
 
-            System.out.println("[Client] Attempting to send a message to server...");
+            System.out.println("[Client] Attempting to retrieve inputted data from server...");
 
             if(requestSocket != null && out != null && in != null) {
 
                 //Communicating with the server
                 try {
 
-                    out.writeBytes("Hello Test");
+                    //In the output buffer write the command entered and send it to the server
+                    out.writeByte(command);
+                    System.out.println("[Client] Data Sent Successfully!");
 
 
                 } catch (Exception e) {
