@@ -36,24 +36,43 @@ class Server {
                 //Here we read the buffer from the client
                 switch(in.read()) {
                     case 1:
-                        System.out.println("[Server] Finding Current Date and Time!");
+                        System.out.println("[Server] Finding Current Date and Time");
 
                         //Run a command read its output and respond to the clients request
-                        clientResponse(out, "Hosts current date and time is " + readCommandOutput(runCommand("date")));
+                        clientResponse(out, "Hosts current date and time is " + readCommandOutput(runCommand("date")), true);
 
                         break;
                     case 2:
+                        System.out.println("[Server] Finding Host Uptime");
+
+                        clientResponse(out, "Hosts current uptime is " + readCommandOutput(runCommand("uptime")), true);
+
                         break;
                     case 3:
+                        System.out.println("[Server] Finding Host Memory Use");
+
+                        clientResponse(out, "Hosts current memory use is " + readCommandOutput(runCommand("free")), true);
+
                         break;
                     case 4:
+                        System.out.println("[Server] Host Network Statistics");
+
+                        clientResponse(out, "Host NetStat is " + readCommandOutput(runCommand("netstat -s")), true);
+
                         break;
                     case 5:
+                        System.out.println("[Server] Finding Current Users");
+
+                        clientResponse(out, "Hosts current user " + readCommandOutput(runCommand("who")), true);
+
                         break;
                     case 6:
+                        System.out.println("[Server] Currently Running Processes");
+
+                        clientResponse(out, "Host currently running processes are " + readCommandOutput(runCommand("ps -c")), true);
+
                         break;
-                    case 7:
-                        break;
+                        //todo add a default? in case unexpected data comes from the client
                 }
 
             } catch(Exception e){
@@ -79,14 +98,20 @@ class Server {
 
     /**
      * Sends a response back to the client through a data output stream
-     * @param outputStream
+     * @param outputStream PrintStream output stream which we write too
+     * @param successfulResponse Boolean true if the program should output a successful response code to stop the client
+     * from reading futher false otherwise
      */
-    private static void clientResponse(PrintStream outputStream, String responseText)
+    private static void clientResponse(PrintStream outputStream, String responseText, boolean successfulResponse)
     {
         try {
 
             outputStream.println("[Server] Response: " + responseText);
-            outputStream.println("[500] OK");
+
+            if(successfulResponse) {
+                //Give a response code so the client knows when to stop reading
+                outputStream.println("[Server] [500] OK");
+            }
 
             outputStream.close();
 
