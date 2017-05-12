@@ -1,5 +1,3 @@
-import java.io.BufferedReader;
-import java.util.InputMismatchException;
 import java.util.LinkedList;
 import java.util.Scanner;
 
@@ -10,6 +8,8 @@ public class Run {
 
 
     private int command = 0; //Command corresponds to the number in the menu
+    private String hostname;
+
 
     /**
      * Main Method
@@ -18,9 +18,11 @@ public class Run {
     public static void main(String[] args) {
         //Create new class instance and call the NON static method
         Run r = new Run();
+        Server s = new Server();
 
         r.printMenu();
         r.processInput();
+        s.listen();
     }
 
 
@@ -42,7 +44,11 @@ public class Run {
 
 
         System.out.println("------------------------------------------------------------");
-        System.out.println("Please type the numbers 1-7 to request data from the server!");
+        System.out.println("Please type the numbers 1-7 to request data from the server.");
+        System.out.println("Use CLI arguments -hostname to specify a desired hostname!");
+        System.out.println("For example: 1 -hostname 127.0.0.1");
+        System.out.println();
+
 
 
         //Iterate through the commands
@@ -52,52 +58,74 @@ public class Run {
 
     }
 
+
+    /**
+     * Validates that the input matches the selected criteria
+     * @param input String input from scanner
+     * @return true if the input is valid false otherwise
+     */
+    private boolean isValidInput(String input)
+    {
+        char[] valid = {'1', '2', '3', '4', '5', '6', '7'};
+
+        for (char c : valid) {
+            if (c == input.charAt(0)) {
+                //The number is valid
+                if(input.contains("-hostname")) {
+                    //Contains the hostname argument
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+
+    /**
+     * Validates Input given from the scanner
+     * sets hostname and command variables
+     */
     private void processInput()
     {
         Scanner s = new Scanner(System.in);
+        String input;
 
         try {
 
-            int input = s.nextInt();
+            input = s.nextLine();
 
-            //Ensure valid input
-            switch(input) {
-                case 1:
-                    command = 1;
-                    break;
-                case 2:
-                    command = 2;
-                    break;
-                case 3:
-                    command = 3;
-                    break;
-                case 4:
-                    command = 4;
-                    break;
-                case 5:
-                    command = 5;
-                    break;
-                case 6:
-                    command = 6;
-                    break;
-                case 7:
-                    command = 7;
-                    System.out.println("Thank you exiting!");
-                    System.exit(0);
-                    break;
-                default:
-                    System.err.println("That is not valid input please enter a number 1-7");
+            //Ensure number is between 1 and 7
+            while(!isValidInput(input)) {
+                System.err.println("Your input is invalid please enter a number between 1 and 7 and ensure that the -hostname flag is set");
+                input = s.nextLine();
             }
 
-        } catch(InputMismatchException e) {
+            //We have our validated command
+            command = Character.getNumericValue(input.charAt(0));
+
+            char[] arr = input.toCharArray();
+            int spaceCounter = 0;
+
+            for(int i = 0; i < arr.length; i++) {
+                if(arr[i] == ' ') {
+                    spaceCounter++;
+
+                    //The second space is the hostname value
+                    if(spaceCounter == 2) {
+                        hostname = input.substring(i + 1, arr.length);
+                    }
+                }
+            }
+
+        } catch(Exception e) {
             System.err.println("That input is invalid please enter a number between 1 and 7");
+            e.printStackTrace();
+
         }
 
         s.close();
 
     }
-
-
-
 
 }
