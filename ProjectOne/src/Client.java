@@ -1,103 +1,38 @@
-import java.io.*;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.net.UnknownHostException;
-import java.util.LinkedList;
-import java.util.Scanner;
+import java.util.*;
 
 /**
  * Created by christianbartram on 5/11/17.
  */
 class Client {
 
-    private static int command = 0; //Command corresponds to the number in the menu
+    private static int command = 1; //Command corresponds to the number in the menu
+    private static int id;
+    private static long endTime;
+
     private static String hostname; //Hostname specified
+    private static HashMap<String, Long> responseTimes = new HashMap<>(); //Clients id is the key and response time is the value
+    private static ArrayList<Thread> threads = new ArrayList<>(); //List to hold the threads
+
 
     public static void main(String[] args)
     {
-
-        Socket requestSocket = null;
-        DataOutputStream out = null;
-        DataInputStream in = null;
-
         printMenu();
         processInput();
 
-        //If the user chose to exit dont send it to the server theres no point
-        if(command == 7) {
-            System.out.println("Thank you for using this software!");
-            System.exit(0);
+        for(int i  = 0; i < 100; i++) {
+            ClientThreader threader = new ClientThreader(id, command, hostname, responseTimes, endTime);
+
+            threads.add(new Thread(threader));
+            //threader.run(); this can execute a thread immediately whenever a client opens it connects
+            id++;
         }
 
-        try {
-            System.out.println("[Client] Making connection request to hostname: " + hostname);
+        //Execute all the threads at once
+        threads.forEach(Thread::run);
 
-            //1. creating a socket to connect to the server
-            requestSocket = new Socket(hostname, 43594);
+        System.out.println("Mean Response Time: " + mean(responseTimes.values()));
 
-            System.out.println("[Client] Connected to localhost on port 43594");
-
-            //Get Input and Output streams
-            out = new DataOutputStream(requestSocket.getOutputStream());
-            in = new DataInputStream(requestSocket.getInputStream());
-
-            System.out.println("[Client] Attempting to retrieve inputted data from server...");
-
-            if(requestSocket != null && out != null && in != null) {
-
-                //Communicating with the server
-                try {
-
-                    //In the output buffer write the command entered and send it to the server
-                    out.writeByte(command);
-                    System.out.println("[Client] Data Sent Successfully!");
-
-                    String responseLine;
-
-                    //Read the response from the server
-                    while ((responseLine = in.readLine()) != null) {
-                        System.out.println(responseLine);
-                        if (responseLine.contains("[500] OK")) {
-                            break;
-                        }
-                    }
-
-
-                } catch (Exception e) {
-
-                    System.err.println("Data received in unknown format");
-                    e.printStackTrace();
-                }
-            }
-
-
-        } catch(UnknownHostException unknownHost) {
-
-            System.err.println("You are trying to connect to an unknown host!");
-
-
-        } catch(IOException ioException) {
-
-            ioException.printStackTrace();
-
-        } finally {
-
-            //Closing connection
-            try{
-
-                System.out.println("[Client] Closing Connection to host");
-                in.close();
-                out.close();
-                requestSocket.close();
-
-            } catch(IOException ioException) {
-
-                ioException.printStackTrace();
-            }
-        }
     }
-
-
 
     /**
      * Prints a menu on the client side for a user to make a selection from
@@ -131,6 +66,14 @@ class Client {
 
     }
 
+    private static double mean(Collection<Long> m) {
+        long sum = 0;
+        for (long aM : m) {
+            sum += aM;
+        }
+        return sum / m.size();
+    }
+
 
     /**
      * Validates that the input matches the selected criteria
@@ -141,6 +84,7 @@ class Client {
     {
         char[] valid = {'1', '2', '3', '4', '5', '6', '7'};
 
+        System.out.println(input);
         for (char c : valid) {
             if (c == input.charAt(0)) {
                 //The number is valid
@@ -186,6 +130,7 @@ class Client {
 
                     //The second space is the hostname value
                     if(spaceCounter == 2) {
+                        //If there is a thread argument parse hostname differently
                         hostname = input.substring(i + 1, arr.length);
                     }
                 }
@@ -197,8 +142,5 @@ class Client {
         }
         s.close();
     }
-
-
-
 
 }

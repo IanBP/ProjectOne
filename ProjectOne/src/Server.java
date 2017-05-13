@@ -18,7 +18,7 @@ class Server {
 
         try {
             //creating a server socket
-            service = new ServerSocket(43594);
+            service = new ServerSocket(8000);
 
             // Wait for connection
             System.out.println("[Server] Waiting for connection...");
