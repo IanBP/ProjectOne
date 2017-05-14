@@ -65,13 +65,12 @@ public class ClientThreader implements Runnable {
             //1. creating a socket to connect to the server
             requestSocket = new Socket(hostname, 8000);
 
-            System.out.println("[Client " + id + "] Connected to localhost on port 43594");
+
+            System.out.println("[Client " + id + "] Connected to localhost on port 8000");
 
             //Get Input and Output streams
             out = new DataOutputStream(requestSocket.getOutputStream());
             in = new DataInputStream(requestSocket.getInputStream());
-
-            System.out.println("[Client " + id + "] Attempting to retrieve inputted data from server...");
 
             if(requestSocket != null && out != null && in != null) {
 
@@ -83,7 +82,7 @@ public class ClientThreader implements Runnable {
 
                     //In the output buffer write the command entered and send it to the server
                     out.writeByte(command);
-                    System.out.println("[Client " + id + "] Data Sent Successfully!");
+                    System.out.println("[Client " + id + "] Request Sent Successfully!");
 
                     String responseLine;
 
@@ -100,7 +99,6 @@ public class ClientThreader implements Runnable {
 
                     responseTimes.put("[Client " + id + "]", (endTime - startTime));
                     System.out.println("[Client " + id + "] Response Time: " + (endTime - startTime));
-
 
                 } catch (Exception e) {
 

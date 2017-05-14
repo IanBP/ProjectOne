@@ -19,7 +19,8 @@ class Client {
         printMenu();
         processInput();
 
-        for(int i  = 0; i < 100; i++) {
+       for(int i  = 0; i < 5; i++) {
+
             ClientThreader threader = new ClientThreader(id, command, hostname, responseTimes, endTime);
 
             threads.add(new Thread(threader));
@@ -84,7 +85,6 @@ class Client {
     {
         char[] valid = {'1', '2', '3', '4', '5', '6', '7'};
 
-        System.out.println(input);
         for (char c : valid) {
             if (c == input.charAt(0)) {
                 //The number is valid
@@ -130,7 +130,7 @@ class Client {
 
                     //The second space is the hostname value
                     if(spaceCounter == 2) {
-                        //If there is a thread argument parse hostname differently
+                        //Parse the hostname
                         hostname = input.substring(i + 1, arr.length);
                     }
                 }

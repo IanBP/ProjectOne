@@ -1,3 +1,5 @@
+import javafx.scene.chart.XYChart;
+
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -8,13 +10,13 @@ import java.net.Socket;
 class Server {
 
 
-    public static void main(String[] args)
-    {
+    public static void main(String[] args) {
 
         ServerSocket service = null;
         Socket connection = null;
         PrintStream out = null;
         DataInputStream in = null;
+        boolean shutdown = false;
 
         try {
             //creating a server socket
@@ -23,72 +25,97 @@ class Server {
             // Wait for connection
             System.out.println("[Server] Waiting for connection...");
 
-            connection = service.accept();
+            while (true) {
 
-            System.out.println("[Server] Connection received from " + connection.getInetAddress().getHostName());
+                connection = service.accept();
 
-            //Get streams from client
-            out = new PrintStream(connection.getOutputStream());
-            in = new DataInputStream(connection.getInputStream());
+                System.out.println("[Server] Connection received from " + connection.getInetAddress().getHostName());
 
-            try {
+                //Get streams from client
+                out = new PrintStream(connection.getOutputStream());
+                in = new DataInputStream(connection.getInputStream());
 
-                //Here we read the buffer from the client
-                switch(in.read()) {
-                    case 1:
-                        System.out.println("[Server] Finding Current Date and Time");
 
-                        //Run a command read its output and respond to the clients request
-                        clientResponse(out, "Hosts current date and time is " + readCommandOutput(runCommand("date")), true);
-
-                        break;
-                    case 2:
-                        System.out.println("[Server] Finding Host Uptime");
-
-                        clientResponse(out, "Hosts current uptime is " + readCommandOutput(runCommand("uptime")), true);
-
-                        break;
-                    case 3:
-                        System.out.println("[Server] Finding Host Memory Use");
-
-                        clientResponse(out, "Hosts current memory use is " + readCommandOutput(runCommand("free")), true);
-
-                        break;
-                    case 4:
-                        System.out.println("[Server] Host Network Statistics");
-
-                        clientResponse(out, "Host NetStat is " + readCommandOutput(runCommand("netstat -s")), true);
-
-                        break;
-                    case 5:
-                        System.out.println("[Server] Finding Current Users");
-
-                        clientResponse(out, "Hosts current user " + readCommandOutput(runCommand("who")), true);
-
-                        break;
-                    case 6:
-                        System.out.println("[Server] Currently Running Processes");
-
-                        clientResponse(out, "Host currently running processes are " + readCommandOutput(runCommand("ps -c")), true);
-
-                        break;
-                        //todo add a default? in case unexpected data comes from the client
-                }
-
-            } catch(Exception e){
-                System.err.println("Data received in unknown format");
-                e.printStackTrace();
+                handleClientConnection(in, out, service, connection, shutdown);
             }
 
-        } catch(IOException ioException) {
-            ioException.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    private static void handleClientConnection(DataInputStream in, PrintStream out, ServerSocket service, Socket connection, boolean shutdown)
+    {
+        try {
+
+            int data = in.read();
+
+            System.out.println("[Server] Reading data from client: " + data);
+
+            //Here we read the buffer from the client
+            switch(data) {
+                case 1:
+                    System.out.println("[Server] Finding Current Date and Time from " + service.getInetAddress().getHostName());
+
+                    //Run a command read its output and respond to the clients request
+                    clientResponse(out, "Hosts current date and time is " + readCommandOutput(runCommand("date")));
+
+                    break;
+                case 2:
+                    System.out.println("[Server] Received Request for Finding Host Uptime from " + service.getInetAddress().getHostName());
+
+                    clientResponse(out, "Hosts current uptime is " + readCommandOutput(runCommand("uptime")));
+
+                    break;
+                case 3:
+                    System.out.println("[Server] Received Request for Host Memory Use " + service.getInetAddress().getHostName());
+
+                    clientResponse(out, "Hosts current memory use is " + readCommandOutput(runCommand("free")));
+
+                    break;
+                case 4:
+                    System.out.println("[Server] Received Request for Host Network Statistics from " + service.getInetAddress().getHostName());
+
+                    clientResponse(out, "Host NetStat is " + readCommandOutput(runCommand("netstat -s")));
+
+                    break;
+                case 5:
+                    System.out.println("[Server] Received Request for Current Users from " + service.getInetAddress().getHostName());
+
+                    clientResponse(out, "Hosts current user " + readCommandOutput(runCommand("who")));
+
+                    break;
+                case 6:
+                    System.out.println("[Server] Received Request for Currently Running Processes from " + service.getInetAddress().getHostName());
+
+                    clientResponse(out, "Host currently running processes are " + readCommandOutput(runCommand("ps -c")));
+
+                    break;
+                case 7:
+                    System.out.println("[Server] Received Request to shutdown...");
+
+                    shutdown = true;
+
+                default:
+                    System.err.println("[Server] Input from client does not match expected values");
+
+            }
+
+        } catch(Exception e) {
+            System.err.println("Data received in unknown format");
+            e.printStackTrace();
         } finally {
+
             //Closing connection
-            try{
-                System.out.println("[Server] Closing Connection...");
-                in.close();
-                out.close();
-                service.close();
+            try {
+                if(shutdown) {
+                    System.out.println("[Server] Closing Connection...");
+                    in.close();
+                    out.close();
+                    service.close();
+                    connection.close();
+                }
             }
             catch(IOException ioException){
                 ioException.printStackTrace();
@@ -96,22 +123,19 @@ class Server {
         }
     }
 
+
     /**
      * Sends a response back to the client through a data output stream
      * @param outputStream PrintStream output stream which we write too
-     * @param successfulResponse Boolean true if the program should output a successful response code to stop the client
-     * from reading futher false otherwise
+     *
      */
-    private static void clientResponse(PrintStream outputStream, String responseText, boolean successfulResponse)
+    private static void clientResponse(PrintStream outputStream, String responseText)
     {
         try {
-
             outputStream.println("[Server] Response: " + responseText);
 
-            if(successfulResponse) {
-                //Give a response code so the client knows when to stop reading
-                outputStream.println("[Server] [500] OK");
-            }
+            //Give a response code so the client knows when to stop reading
+            outputStream.println("[Server] [500] OK");
 
             outputStream.close();
 
@@ -133,6 +157,7 @@ class Server {
         try {
             BufferedReader stdInput = new BufferedReader(new InputStreamReader(process.getInputStream()));
 
+            //Read the command response
             while ((s = stdInput.readLine()) != null) {
                 sb.append(s);
             }
@@ -153,45 +178,13 @@ class Server {
     private static Process runCommand(String command)
     {
         try {
+            //Get the runtime object and execute the command
             return Runtime.getRuntime().exec(command);
         } catch(IOException e) {
             e.printStackTrace();
         }
+
         //Something went wrong
         return null;
     }
 }
-
-
-
-
-/*
-
-for(int i = 0 i < 10 i++ {
-
-new Thread();
-
-}
-
-for(int i = 0; i < 10; i++)
-{
- thread[i].start();
-}
-
-startTime;
-thread.start.
-
- must have separate time measurements for each thread
-
-thread.stop;
-stopTime;
-
-response time = startTime - stopTime
- */
-//date
-//uptime
-//free
-//netstat
-//who
-//ps -c
-//ps -aux
